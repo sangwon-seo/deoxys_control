@@ -47,13 +47,13 @@ def main():
 
     # Golden resetting joints
     reset_joint_positions = [
-        0.345,
-        -0.327,
-        -0.286,
-        -2.654,
-        -0.089,
-        2.397,
-        0.726,
+        0.140,
+        -0.293,
+        -0.213,
+        -2.06,
+        0.0267,
+        1.816,
+        0.748,
     ]
 
     # This is for varying initialization of joints a little bit to

@@ -7,7 +7,7 @@ traj_interpolator_cfg:
   time_fraction: 0.3
 
 Kp:
-  translation: 350.0
+  translation: 150.0
   rotation: 250.0
 
 action_scale:

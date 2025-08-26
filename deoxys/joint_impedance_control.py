@@ -1,4 +1,4 @@
-"""Moving robot joint positions to initial pose for starting new experiments."""
+"""Example script for using joint impedance control."""
 import argparse
 import pickle
 import threading
@@ -8,10 +8,8 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
-# import sys
-# sys.path.append('../')
-
 from deoxys import config_root
+from deoxys.experimental.motion_utils import joint_interpolation_traj
 from deoxys.franka_interface import FrankaInterface
 from deoxys.utils import YamlConfig
 from deoxys.utils.input_utils import input2action
@@ -25,12 +23,8 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--interface-cfg", type=str, default="charmander.yml")
     parser.add_argument(
-        "--controller-cfg", type=str, default="joint-position-controller.yml"
+        "--controller-cfg", type=str, default="joint-impedance-controller.yml"
     )
-    parser.add_argument(
-        "--folder", type=Path, default="data_collection_example/example_data"
-    )
-
     args = parser.parse_args()
     return args
 
@@ -43,17 +37,17 @@ def main():
     )
     controller_cfg = YamlConfig(config_root + f"/{args.controller_cfg}").as_easydict()
 
-    controller_type = "JOINT_POSITION"
+    controller_type = "JOINT_IMPEDANCE"
 
     # Golden resetting joints
     reset_joint_positions = [
-        0.345,
-        -0.327,
-        -0.286,
-        -2.654,
-        -0.089,
-        2.397,
-        0.726,
+        0.09162008114028396,
+        -0.19826458111314524,
+        -0.01990020486871322,
+        -2.4732269941140346,
+        -0.01307073642274261,
+        2.30396583422025,
+        0.8480939705504309,
     ]
 
     # This is for varying initialization of joints a little bit to
@@ -62,23 +56,16 @@ def main():
         e + np.clip(np.random.randn() * 0.005, -0.005, 0.005)
         for e in reset_joint_positions
     ]
-    action = reset_joint_positions + [-1.0]
 
-    while True:
-        if len(robot_interface._state_buffer) > 0:
-            logger.info(f"Current Robot joint: {np.round(robot_interface.last_q, 3)}")
-            logger.info(f"Desired Robot joint: {np.round(robot_interface.last_q_d, 3)}")
+    while robot_interface.state_buffer_size == 0:
+        logger.warn("Robot state not received")
+        time.sleep(0.5)
 
-            if (
-                np.max(
-                    np.abs(
-                        np.array(robot_interface._state_buffer[-1].q)
-                        - np.array(reset_joint_positions)
-                    )
-                )
-                < 1e-3
-            ):
-                break
+    last_q = np.array(robot_interface.last_q)
+    joint_traj = joint_interpolation_traj(start_q=last_q, end_q=reset_joint_positions)
+
+    for joint in joint_traj:
+        action = joint.tolist() + [-1.0]
         robot_interface.control(
             controller_type=controller_type,
             action=action,

@@ -47,7 +47,7 @@ def main():
 
     # Golden resetting joints
     reset_joint_positions = [
-        0.345,
+        0.245,
         -0.327,
         -0.286,
         -2.654,

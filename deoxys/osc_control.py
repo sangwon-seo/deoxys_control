@@ -63,8 +63,10 @@ def osc_move(robot_interface, controller_type, controller_cfg, target_pose, num_
         action_axis_angle = np.clip(action_axis_angle, -0.5, 0.5)
 
         action = action_pos.tolist() + action_axis_angle.tolist() + [-1.0]
-        logger.info(f"Axis angle action {action_axis_angle.tolist()}")
+        # logger.info(f"Axis angle action {action_axis_angle.tolist()}")
         # print(np.round(action, 2))
+        print(action)
+        # action = [0.0,0.0,0.0,0.0,0.0,0.0,-1.0]
         robot_interface.control(
             controller_type=controller_type,
             action=action,
